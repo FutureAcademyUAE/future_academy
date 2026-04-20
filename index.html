@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Future Academy — Control Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root {
+  --navy:#07142B; --navy2:#0D2251; --navy3:#162D5A;
+  --gold:#F4B942; --gold2:#FDD87A; --gold3:#FFF3D0;
+  --bg:#F0F3FB; --bg2:#E4EAF6; --white:#fff;
+  --border:#DDE4F2; --muted:#6B7A99;
+  --green:#16A34A; --green-bg:#DCFCE7;
+  --red:#DC2626; --red-bg:#FEE2E2;
+  --blue:#2563EB; --blue-bg:#DBEAFE;
+  --shadow: 0 1px 3px rgba(7,20,43,0.08), 0 4px 16px rgba(7,20,43,0.05);
+  --shadow-lg: 0 4px 24px rgba(7,20,43,0.14);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh;overflow-x:hidden;}
+
+/* ─── SETUP OVERLAY ─────────────────────────── */
+#setup-overlay{
+  position:fixed;inset:0;background:var(--navy);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.setup-card{
+  background:var(--white);border-radius:24px;padding:48px;
+  width:560px;max-width:95vw;box-shadow:var(--shadow-lg);
+}
+.setup-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.setup-logo-name{font-size:22px;font-weight:800;color:var(--navy);}
+.setup-logo-name span{color:var(--gold);}
+.setup-title{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+.setup-sub{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:28px;}
+.setup-field{margin-bottom:16px;}
+.setup-label{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.setup-input{
+  width:100%;padding:11px 14px;border-radius:10px;
+  border:1.5px solid var(--border);font-size:13px;font-family:'Outfit',sans-serif;
+  color:var(--navy);background:var(--bg);outline:none;transition:border 0.15s;
+}
+.setup-input:focus{border-color:var(--gold);}
+.setup-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:var(--navy);color:var(--gold);font-size:15px;font-weight:800;
+  cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;
+}
+.setup-btn:hover{background:var(--navy2);}
+.setup-note{font-size:11px;color:var(--muted);margin-top:16px;line-height:1.6;text-align:center;}
+.setup-note a{color:var(--gold);text-decoration:none;font-weight:600;}
+.setup-steps{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:24px;}
+.setup-step{font-size:12px;color:var(--muted);padding:4px 0;display:flex;gap:8px;align-items:flex-start;}
+.setup-step-n{font-weight:800;color:var(--gold);flex-shrink:0;}
+
+/* ─── SIDEBAR ───────────────────────────────── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:240px;
+  background:var(--navy);z-index:100;display:flex;flex-direction:column;
+  overflow-y:auto;transition:transform 0.25s;
+}
+.logo-area{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,0.07);}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-orbit{width:34px;height:34px;}
+.logo-name{font-size:15px;font-weight:800;color:#fff;}
+.logo-name span{color:var(--gold);}
+.logo-user{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;font-family:'Tajawal',sans-serif;}
+.nav{padding:12px 8px;flex:1;}
+.nav-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:8px 10px 3px;}
+.nav-item{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;
+  border-radius:8px;cursor:pointer;font-size:12.5px;color:rgba(255,255,255,0.55);
+  transition:all .15s;margin-bottom:1px;border:none;background:none;width:100%;text-align:left;
+}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff;}
+.nav-item.active{background:rgba(244,185,66,0.14);color:var(--gold);font-weight:600;}
+.nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;}
+.nav-badge.red{background:var(--red);color:#fff;}
+.sidebar-bottom{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.07);}
+.user-chip{display:flex;align-items:center;gap:10px;}
+.user-av{width:34px;height:34px;border-radius:50%;background:rgba(244,185,66,0.2);color:var(--gold);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:600;color:#fff;}
+.user-role{font-size:10px;color:rgba(255,255,255,0.35);}
+.signout-btn{margin-top:10px;width:100%;padding:7px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:none;color:rgba(255,255,255,0.4);font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;}
+.signout-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ─── MAIN ──────────────────────────────────── */
+.main{margin-left:240px;min-height:100vh;}
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;box-shadow:var(--shadow);
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.page-title-bar{font-size:15px;font-weight:700;color:var(--navy);}
+.api-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.api-status.ok{background:var(--green-bg);color:var(--green);}
+.api-status.err{background:var(--red-bg);color:var(--red);}
+.api-status.loading{background:var(--blue-bg);color:var(--blue);}
+.pulse{width:6px;height:6px;border-radius:50%;animation:pulse 1.5s infinite;}
+.pulse.green{background:var(--green);}
+.pulse.red{background:var(--red);}
+.pulse.blue{background:var(--blue);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;}
+.refresh-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ─── SECTIONS ──────────────────────────────── */
+.section{display:none;padding:28px 32px;animation:fadeUp .25s ease;}
+.section.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ─── STAT GRID ─────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:18px 20px;box-shadow:var(--shadow);}
+.stat-icon-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.stat-emoji{font-size:22px;}
+.stat-trend{font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;}
+.stat-trend.up{background:var(--green-bg);color:var(--green);}
+.stat-trend.warn{background:var(--gold3);color:#8B6000;}
+.stat-label{font-size:11px;color:var(--muted);font-weight:500;}
+.stat-val{font-size:28px;font-weight:800;color:var(--navy);line-height:1;margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:5px;}
+
+/* ─── CARDS ─────────────────────────────────── */
+.card{background:var(--white);border-radius:14px;border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px;}
+.card-action{font-size:11px;font-weight:700;color:var(--gold);cursor:pointer;background:none;border:none;font-family:'Outfit',sans-serif;padding:5px 12px;border-radius:7px;border:1.5px solid var(--gold);transition:all .15s;}
+.card-action:hover{background:var(--gold);color:var(--navy);}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* ─── CLASSROOM LIST ────────────────────────── */
+.class-item{
+  display:flex;align-items:center;gap:14px;padding:12px 0;
+  border-bottom:1px solid var(--bg2);cursor:pointer;transition:all .15s;
+}
+.class-item:last-child{border-bottom:none;}
+.class-item:hover{background:var(--bg);border-radius:8px;padding-left:8px;padding-right:8px;margin:0 -8px;}
+.class-color{width:4px;height:44px;border-radius:2px;flex-shrink:0;}
+.class-info{flex:1;min-width:0;}
+.class-name{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.class-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.class-stats{display:flex;gap:10px;flex-shrink:0;}
+.class-stat{text-align:center;}
+.class-stat-val{font-size:14px;font-weight:700;color:var(--navy);}
+.class-stat-lbl{font-size:9px;color:var(--muted);}
+.open-btn{
+  font-size:11px;font-weight:700;padding:5px 12px;border-radius:7px;
+  background:var(--bg);border:1.5px solid var(--border);color:var(--navy);
+  cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;flex-shrink:0;
+  text-decoration:none;display:inline-flex;align-items:center;gap:5px;
+}
+.open-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ─── VIDEO LIST ────────────────────────────── */
+.video-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg2);align-items:center;}
+.video-item:last-child{border-bottom:none;}
+.video-thumb{width:80px;height:45px;border-radius:7px;background:var(--navy);flex-shrink:0;object-fit:cover;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
+.video-thumb-img{width:100%;height:100%;object-fit:cover;border-radius:7px;}
+.video-thumb-placeholder{font-size:18px;}
+.video-info{flex:1;min-width:0;}
+.video-title{font-size:12px;font-weight:600;color:var(--navy);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.video-meta{font-size:10px;color:var(--muted);margin-top:3px;}
+.video-stats{font-size:10px;color:var(--muted);flex-shrink:0;text-align:right;}
+.video-views{font-size:13px;font-weight:700;color:var(--navy);}
+.video-link{font-size:10px;font-weight:700;color:var(--gold);text-decoration:none;display:block;margin-top:3px;}
+
+/* ─── STUDENT TABLE ─────────────────────────── */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th{text-align:left;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;border-bottom:2px solid var(--border);}
+.data-table td{padding:11px 12px;border-bottom:1px solid var(--bg2);font-size:12px;color:var(--navy);vertical-align:middle;}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--bg);}
+.pill{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;display:inline-block;}
+.pill-green{background:var(--green-bg);color:var(--green);}
+.pill-red{background:var(--red-bg);color:var(--red);}
+.pill-yellow{background:var(--gold3);color:#8B6000;}
+.pill-blue{background:var(--blue-bg);color:var(--blue);}
+
+/* ─── MODALS ────────────────────────────────── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(7,20,43,0.55);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--white);border-radius:18px;padding:28px;width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);}
+.modal-title{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:22px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);transition:color .15s;}
+.modal-close:hover{color:var(--red);}
+.form-row{margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px;display:block;}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:10px 13px;border-radius:9px;border:1.5px solid var(--border);
+  font-size:13px;font-family:'Outfit',sans-serif;color:var(--navy);background:var(--bg);
+  outline:none;transition:border .15s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--gold);}
+.form-textarea{resize:vertical;min-height:80px;}
+.form-row-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.btn-primary{padding:10px 22px;border-radius:9px;border:none;background:var(--navy);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;}
+.btn-primary:hover{background:var(--navy2);}
+.btn-secondary{padding:10px 22px;border-radius:9px;border:1.5px solid var(--border);background:var(--white);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--navy);}
+.btn-danger{padding:10px 22px;border-radius:9px;border:none;background:var(--red-bg);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;}
+
+/* ─── TOAST ─────────────────────────────────── */
+#toast{
+  position:fixed;bottom:28px;right:28px;z-index:9998;
+  background:var(--navy);color:#fff;font-size:13px;font-weight:600;
+  padding:14px 20px;border-radius:12px;box-shadow:var(--shadow-lg);
+  display:none;align-items:center;gap:10px;max-width:340px;
+}
+#toast.show{display:flex;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+#toast .t-icon{font-size:18px;}
+
+/* ─── SPINNER ───────────────────────────────── */
+.spinner{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(244,185,66,0.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-state{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;color:var(--muted);font-size:13px;}
+
+/* ─── EMPTY STATE ───────────────────────────── */
+.empty{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.5;}
+.empty-text{font-size:13px;}
+
+/* ─── ASSIGN FORM ───────────────────────────── */
+.assign-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bg2);}
+.assign-item:last-child{border-bottom:none;}
+.assign-title{flex:1;font-size:12px;font-weight:600;color:var(--navy);}
+.assign-meta{font-size:10px;color:var(--muted);}
+.assign-due{font-size:10px;color:var(--muted);}
+.assign-status .pill{font-size:9px;}
+
+/* ─── ANNOUNCEMENTS ─────────────────────────── */
+.ann-item{padding:12px 0;border-bottom:1px solid var(--bg2);}
+.ann-item:last-child{border-bottom:none;}
+.ann-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ann-class{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--gold3);color:#8B6000;}
+.ann-time{font-size:10px;color:var(--muted);}
+.ann-text{font-size:12px;color:var(--navy);line-height:1.6;}
+
+/* ─── WELCOME BANNER ────────────────────────── */
+.hero{
+  background:var(--navy);border-radius:18px;padding:26px 30px;
+  display:flex;align-items:center;gap:24px;margin-bottom:20px;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;background:rgba(244,185,66,0.07);}
+.hero::after{content:'';position:absolute;right:100px;bottom:-100px;width:200px;height:200px;border-radius:50%;background:rgba(244,185,66,0.04);}
+.hero-icon{font-size:46px;flex-shrink:0;position:relative;z-index:1;}
+.hero-text{flex:1;position:relative;z-index:1;}
+.hero-title{font-size:20px;font-weight:800;color:#fff;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:12px;color:rgba(255,255,255,0.48);margin-top:5px;line-height:1.7;}
+.hero-actions{position:relative;z-index:1;display:flex;gap:10px;flex-shrink:0;}
+.hero-btn{padding:9px 18px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;border:none;transition:all .15s;}
+.hero-btn.gold{background:var(--gold);color:var(--navy);}
+.hero-btn.outline{background:transparent;border:1.5px solid rgba(255,255,255,0.2);color:#fff;}
+
+/* ─── TABS ──────────────────────────────────── */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:18px;}
+.tab{padding:9px 18px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-left:none;border-right:none;border-top:none;font-family:'Outfit',sans-serif;}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ─── PROGRESS ──────────────────────────────── */
+.prog-row{margin-bottom:10px;}
+.prog-header{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
+.prog-name{font-weight:600;}
+.prog-bg{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+
+/* ─── CALENDAR ──────────────────────────────── */
+.cal-day{background:var(--bg);border-radius:10px;padding:10px;min-height:100px;}
+.cal-head{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.cal-slot{border-radius:6px;padding:6px 8px;margin-bottom:5px;font-size:10px;}
+.cal-slot-name{font-weight:700;line-height:1.3;}
+.cal-slot-time{opacity:.75;margin-top:1px;}
+.cal-live{background:var(--gold3);color:#7A5800;}
+.cal-rec{background:var(--blue-bg);color:#1E40AF;}
+
+/* ─── SHEET TRACKER ─────────────────────────── */
+.tracker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.tracker-stat{background:var(--bg);border-radius:10px;padding:14px;text-align:center;}
+.tracker-val{font-size:22px;font-weight:800;color:var(--navy);}
+.tracker-label{font-size:11px;color:var(--muted);margin-top:3px;}
+
+.action-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.action-card{
+  background:var(--white);border-radius:12px;border:1.5px solid var(--border);
+  padding:16px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.action-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 16px rgba(244,185,66,0.15);}
+.action-icon{font-size:28px;margin-bottom:8px;}
+.action-name{font-size:12px;font-weight:700;color:var(--navy);}
+.action-desc{font-size:10px;color:var(--muted);margin-top:3px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP OVERLAY ═══════════════════════════════════ -->
+<div id="setup-overlay">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <svg width="36" height="36" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="110" cy="110" r="12" fill="#F4B942"/>
+        <circle cx="110" cy="110" r="18" fill="none" stroke="rgba(244,185,66,0.2)" stroke-width="4"/>
+        <ellipse cx="110" cy="110" rx="80" ry="28" fill="none" stroke="#07142B" stroke-width="3" transform="rotate(0 110 110)"/>
+        <circle cx="190" cy="110" r="8" fill="#07142B" transform="rotate(0 110 110)"/>
+        <ellipse cx="110" cy="110" rx="80" ry="28" fill="none" stroke="#F4B942" stroke-width="3" transform="rotate(60 110 110)"/>
+        <circle cx="190" cy="110" r="8" fill="#F4B942" transform="rotate(60 110 110)"/>
+        <ellipse cx="110" cy="110" rx="80" ry="28" fill="none" stroke="#07142B" stroke-width="3" opacity=".35" transform="rotate(120 110 110)"/>
+        <circle cx="190" cy="110" r="8" fill="#07142B" opacity=".35" transform="rotate(120 110 110)"/>
+      </svg>
+      <div class="setup-logo-name">Future <span>Academy</span></div>
+    </div>
+    <div class="setup-title">Connect Your Platform</div>
+    <div class="setup-sub">Enter your Google OAuth Client ID to connect live to Google Classroom, YouTube, Drive, and Sheets. This is a one-time setup.</div>
+
+    <div style="background:#DCFCE7;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="font-size:16px;flex-shrink:0;">🔒</span>
+      <div style="font-size:12px;color:#065F46;line-height:1.6;"><strong>Security reminder before connecting:</strong> Make sure your Google Cloud OAuth Consent Screen is set to <strong>"Testing"</strong> (never publish), only <strong>your email</strong> is listed as a Test User, and your GitHub repo is set to <strong>Private</strong>. See the Security Guide for full instructions.</div>
+    </div>
+    <div class="setup-steps">
+      <div class="setup-step"><span class="setup-step-n">1.</span> GitHub repo → Settings → Change visibility to <strong>Private</strong> (Pages still works fine)</div>
+      <div class="setup-step"><span class="setup-step-n">2.</span> Google Cloud → OAuth Consent Screen → Status must be <strong>"Testing"</strong> — NEVER click "Publish App"</div>
+      <div class="setup-step"><span class="setup-step-n">3.</span> Test Users → keep ONLY <strong>future.academy.ae@gmail.com</strong> — no other email</div>
+      <div class="setup-step"><span class="setup-step-n">4.</span> Credentials → Edit Client ID → Authorized Origins → ONLY your GitHub Pages URL (remove localhost)</div>
+      <div class="setup-step"><span class="setup-step-n">5.</span> Enable <strong>2-Step Verification</strong> on your Google account at myaccount.google.com/security</div>
+      <div class="setup-step"><span class="setup-step-n">6.</span> Paste your Client ID below and connect — the weekly re-login is a security feature, keep it</div>
+    </div>
+
+    <div class="setup-field">
+      <div class="setup-label">🔑 Google OAuth Client ID</div>
+      <input class="setup-input" id="client-id-input" type="text" placeholder="XXXXXXXX.apps.googleusercontent.com" />
+    </div>
+    <div class="setup-field">
+      <div class="setup-label">📺 YouTube Channel ID <span style="font-weight:400;color:var(--muted);">(optional — find at youtube.com/account_advanced)</span></div>
+      <input class="setup-input" id="yt-channel-input" type="text" placeholder="UCxxxxxxxxxxxxxxxxxxxx" />
+    </div>
+    <button class="setup-btn" onclick="initPlatform()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Connect & Sign In with Google
+    </button>
+    <div class="setup-note">
+      🔒 Your data never leaves your Google account. Platform runs entirely in your browser.<br>
+      Only <strong>future.academy.ae@gmail.com</strong> can sign in while app is in Testing mode.<br>
+      Need help? <a href="https://console.cloud.google.com" target="_blank">Open Google Cloud Console →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SIDEBAR ══════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="logo-area">
+    <div class="logo-row">
+      <svg class="logo-orbit" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="110" cy="110" r="10" fill="#F4B942"/>
+        <ellipse cx="110" cy="110" rx="68" ry="24" fill="none" stroke="#fff" stroke-width="2.5" transform="rotate(0 110 110)"/>
+        <circle cx="178" cy="110" r="7" fill="#fff" transform="rotate(0 110 110)"/>
+        <ellipse cx="110" cy="110" rx="68" ry="24" fill="none" stroke="#F4B942" stroke-width="2.5" transform="rotate(60 110 110)"/>
+        <circle cx="178" cy="110" r="7" fill="#F4B942" transform="rotate(60 110 110)"/>
+        <ellipse cx="110" cy="110" rx="68" ry="24" fill="none" stroke="#fff" stroke-width="2.5" opacity=".3" transform="rotate(120 110 110)"/>
+      </svg>
+      <div>
+        <div class="logo-name">Future <span>Academy</span></div>
+        <div class="logo-user" id="sidebar-email">أكاديمية المستقبل</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" onclick="showSection('dashboard',this)"><span class="nav-icon">⊞</span> Dashboard</button>
+
+    <div class="nav-label" style="margin-top:8px;">Google Classroom</div>
+    <button class="nav-item" onclick="showSection('classes',this)"><span class="nav-icon">🏫</span> My Classes <span class="nav-badge" id="badge-classes">—</span></button>
+    <button class="nav-item" onclick="showSection('students',this)"><span class="nav-icon">👩‍🎓</span> Students <span class="nav-badge" id="badge-students">—</span></button>
+    <button class="nav-item" onclick="showSection('assignments',this)"><span class="nav-icon">📝</span> Assignments <span class="nav-badge red" id="badge-assign">—</span></button>
+    <button class="nav-item" onclick="showSection('announcements',this)"><span class="nav-icon">📢</span> Announcements</button>
+
+    <div class="nav-label" style="margin-top:8px;">YouTube</div>
+    <button class="nav-item" onclick="showSection('videos',this)"><span class="nav-icon">▶</span> Video Library <span class="nav-badge" id="badge-videos">—</span></button>
+    <button class="nav-item" onclick="showSection('upload',this)"><span class="nav-icon">⬆</span> Upload Lesson</button>
+
+    <div class="nav-label" style="margin-top:8px;">Academy Management</div>
+    <button class="nav-item" onclick="showSection('schedule',this)"><span class="nav-icon">📅</span> Schedule</button>
+    <button class="nav-item" onclick="showSection('tracker',this)"><span class="nav-icon">💰</span> Fee Tracker</button>
+    <button class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📊</span> Reports</button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="user-av" id="user-initials">FA</div>
+      <div>
+        <div class="user-name" id="user-name">Loading...</div>
+        <div class="user-role">Academy Admin · 🔒 Secured</div>
+      </div>
+    </div>
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
+    <div style="margin-top:8px;font-size:10px;color:rgba(255,255,255,0.2);text-align:center;line-height:1.5;">OAuth Testing Mode<br>Only your email can access</div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═════════════════════════════════════════════ -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="page-title-bar" id="page-title">Dashboard</div>
+      <div class="api-status loading" id="api-status">
+        <div class="pulse blue"></div> Connecting...
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px;background:var(--green-bg);color:var(--green);display:flex;align-items:center;gap:5px;">🔒 Secured · Testing Mode Only</div>
+      <button class="refresh-btn" onclick="refreshAll()">↻ Refresh</button>
+      <button class="card-action" onclick="openModal('create-class-modal')">+ New Class</button>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ───────────────────────────────── -->
+  <div class="section active" id="sec-dashboard">
+    <div class="hero">
+      <div class="hero-icon">🎓</div>
+      <div class="hero-text">
+        <div class="hero-title">Welcome, <span id="hero-name">Admin</span> — Future Academy</div>
+        <div class="hero-sub">Live connection to Google Classroom · YouTube · Google Drive · Sheets<br>All your data is real and synced directly from your Google account.<br><span style="color:rgba(244,185,66,0.65);font-size:11px;">🔒 OAuth Testing Mode · Only future.academy.ae@gmail.com can access · Data never leaves your Google account</span></div>
+      </div>
+      <div class="hero-actions">
+        <button class="hero-btn gold" onclick="openModal('create-class-modal')">+ Create Class</button>
+        <button class="hero-btn outline" onclick="openModal('announcement-modal')">📢 Announce</button>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon-row"><div class="stat-emoji">🏫</div><div class="stat-trend up" id="dash-classes-trend">Active</div></div>
+        <div class="stat-label">Google Classes</div>
+        <div class="stat-val" id="dash-classes">—</div>
+        <div class="stat-sub">Live from Classroom</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-row"><div class="stat-emoji">👩‍🎓</div><div class="stat-trend up" id="dash-students-trend">Enrolled</div></div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-val" id="dash-students">—</div>
+        <div class="stat-sub">Across all classes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-row"><div class="stat-emoji">▶️</div><div class="stat-trend up">YouTube</div></div>
+        <div class="stat-label">Recorded Lessons</div>
+        <div class="stat-val" id="dash-videos">—</div>
+        <div class="stat-sub">In your channel</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-row"><div class="stat-emoji">📝</div><div class="stat-trend warn" id="dash-assign-trend">Pending</div></div>
+        <div class="stat-label">Assignments</div>
+        <div class="stat-val" id="dash-assignments">—</div>
+        <div class="stat-sub">Across all classes</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">🏫 Recent Classes</div>
+          <button class="card-action" onclick="showSection('classes',null)">View all</button>
+        </div>
+        <div id="dash-class-list"><div class="loading-state"><div class="spinner"></div> Loading classes...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">▶ Recent Videos</div>
+          <button class="card-action" onclick="showSection('videos',null)">View all</button>
+        </div>
+        <div id="dash-video-list"><div class="loading-state"><div class="spinner"></div> Loading videos...</div></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📝 Quick Actions</div></div>
+        <div class="action-grid" style="grid-template-columns:repeat(2,1fr);">
+          <div class="action-card" onclick="openModal('create-class-modal')">
+            <div class="action-icon">🏫</div>
+            <div class="action-name">New Class</div>
+            <div class="action-desc">Create in Classroom</div>
+          </div>
+          <div class="action-card" onclick="openModal('create-assign-modal')">
+            <div class="action-icon">📝</div>
+            <div class="action-name">Assignment</div>
+            <div class="action-desc">Post to Classroom</div>
+          </div>
+          <div class="action-card" onclick="openModal('announcement-modal')">
+            <div class="action-icon">📢</div>
+            <div class="action-name">Announce</div>
+            <div class="action-desc">Post to class</div>
+          </div>
+          <div class="action-card" onclick="showSection('upload',null)">
+            <div class="action-icon">⬆</div>
+            <div class="action-name">Upload Video</div>
+            <div class="action-desc">Add to YouTube</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📊 Connected Services</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px;" id="services-status">
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+            <span style="font-size:18px;">🏫</span>
+            <span style="flex:1;font-weight:600;">Google Classroom</span>
+            <span class="pill pill-green" id="svc-classroom">Checking...</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+            <span style="font-size:18px;">▶️</span>
+            <span style="flex:1;font-weight:600;">YouTube</span>
+            <span class="pill pill-green" id="svc-youtube">Checking...</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+            <span style="font-size:18px;">📁</span>
+            <span style="flex:1;font-weight:600;">Google Drive</span>
+            <span class="pill pill-green" id="svc-drive">Checking...</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+            <span style="font-size:18px;">📊</span>
+            <span style="flex:1;font-weight:600;">Google Sheets</span>
+            <span class="pill pill-green" id="svc-sheets">Checking...</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;">
+            <span style="font-size:18px;">💬</span>
+            <span style="flex:1;font-weight:600;">WhatsApp (parent comms)</span>
+            <span class="pill pill-green">Via wa.me links</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CLASSES ──────────────────────────────────── -->
+  <div class="section" id="sec-classes">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">My Classes</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Live from Google Classroom — <span id="class-count">loading...</span></p></div>
+      <button class="card-action" onclick="openModal('create-class-modal')">+ Create Class</button>
+    </div>
+    <div id="classes-list"><div class="loading-state"><div class="spinner"></div> Fetching from Google Classroom...</div></div>
+  </div>
+
+  <!-- ── STUDENTS ─────────────────────────────────── -->
+  <div class="section" id="sec-students">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">Students</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">All enrolled students across your classes</p></div>
+      <div style="display:flex;gap:10px;">
+        <select class="form-select" style="width:200px;padding:7px 12px;font-size:12px;" id="student-class-filter" onchange="filterStudentsByClass()">
+          <option value="">All Classes</option>
+        </select>
+      </div>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Student</th><th>Email</th><th>Class</th><th>Enrolled</th><th>Status</th></tr></thead>
+        <tbody id="students-table"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div> Loading students...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ASSIGNMENTS ──────────────────────────────── -->
+  <div class="section" id="sec-assignments">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">Assignments</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">All coursework from Google Classroom</p></div>
+      <button class="card-action" onclick="openModal('create-assign-modal')">+ New Assignment</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,0,'assign')">All</button>
+      <button class="tab" onclick="switchTab(this,1,'assign')">Published</button>
+      <button class="tab" onclick="switchTab(this,2,'assign')">Draft</button>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table class="data-table" id="assign-table-el">
+        <thead><tr><th>Title</th><th>Class</th><th>Type</th><th>Points</th><th>Due Date</th><th>State</th><th>Action</th></tr></thead>
+        <tbody id="assign-table"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div> Loading assignments...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ANNOUNCEMENTS ────────────────────────────── -->
+  <div class="section" id="sec-announcements">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">Announcements</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Posted to Google Classroom streams</p></div>
+      <button class="card-action" onclick="openModal('announcement-modal')">+ Post Announcement</button>
+    </div>
+    <div class="card">
+      <div id="announcements-list"><div class="loading-state"><div class="spinner"></div> Loading announcements...</div></div>
+    </div>
+  </div>
+
+  <!-- ── VIDEOS ───────────────────────────────────── -->
+  <div class="section" id="sec-videos">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">Video Library</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Your YouTube channel — Future Academy</p></div>
+      <button class="card-action" onclick="showSection('upload',null)">+ Upload Lesson</button>
+    </div>
+    <div class="card">
+      <div id="videos-list"><div class="loading-state"><div class="spinner"></div> Loading from YouTube...</div></div>
+    </div>
+  </div>
+
+  <!-- ── UPLOAD ───────────────────────────────────── -->
+  <div class="section" id="sec-upload">
+    <div style="margin-bottom:20px;"><h2 style="font-size:20px;font-weight:800;">Upload Lesson to YouTube</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Upload as Unlisted and automatically share to Google Classroom</p></div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📹 Video Details</div></div>
+        <div class="form-row">
+          <label class="form-label">Grade & Subject</label>
+          <div class="form-row-two">
+            <select class="form-select" id="up-grade"><option value="">Select Grade</option><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option></select>
+            <select class="form-select" id="up-subject"><option value="">Select Subject</option><option>Mathematics</option><option>English</option><option>Arabic</option><option>Science</option><option>Islamic Studies</option><option>Quran</option><option>Social Studies</option><option>Geography</option><option>History</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Topic / Lesson Title</label>
+          <input class="form-input" id="up-topic" placeholder="e.g. Fractions — Introduction" />
+        </div>
+        <div class="form-row">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="up-desc" placeholder="What this lesson covers..."></textarea>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Video File</label>
+          <input type="file" id="up-file" accept="video/*" onchange="onVideoFileSelect()" style="display:none"/>
+          <div id="upload-drop" onclick="document.getElementById('up-file').click()"
+            style="border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .15s;"
+            ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+            ondragleave="this.style.borderColor='var(--border)'"
+            ondrop="onDrop(event)">
+            <div style="font-size:32px;margin-bottom:8px;">📹</div>
+            <div style="font-size:13px;font-weight:600;color:var(--navy);">Click to select or drag video here</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">MP4, MOV, AVI · Max 15 GB</div>
+          </div>
+          <div id="file-selected" style="display:none;margin-top:8px;padding:10px 14px;background:var(--green-bg);border-radius:8px;font-size:12px;font-weight:600;color:var(--green);"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">Also post link to Classroom class</label>
+          <select class="form-select" id="up-class"><option value="">Don't post to Classroom</option></select>
+        </div>
+        <div style="margin-top:4px;">
+          <div id="upload-progress-wrap" style="display:none;margin-bottom:12px;">
+            <div class="prog-bg"><div class="prog-fill" id="upload-progress-bar" style="width:0%;background:var(--gold);"></div></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="upload-progress-text">Uploading...</div>
+          </div>
+          <button class="btn-primary" style="width:100%;padding:13px;" onclick="uploadToYouTube()">⬆ Upload to YouTube (Unlisted)</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📋 Naming Preview</div></div>
+        <div style="background:var(--bg);border-radius:9px;padding:14px;font-size:12px;font-family:monospace;color:var(--navy);margin-bottom:14px;" id="title-preview">
+          [Grade] | [Subject] | [Topic] | Future Academy
+        </div>
+        <div class="card-hd" style="margin-top:16px;"><div class="card-title">💡 Instructions</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:12px;color:var(--muted);display:flex;gap:8px;"><span style="color:var(--green);font-weight:700;">✓</span> Video uploads as <strong>Unlisted</strong> — only students with the link can watch</div>
+          <div style="font-size:12px;color:var(--muted);display:flex;gap:8px;"><span style="color:var(--green);font-weight:700;">✓</span> Auto-named using your grade, subject and topic</div>
+          <div style="font-size:12px;color:var(--muted);display:flex;gap:8px;"><span style="color:var(--green);font-weight:700;">✓</span> If a class is selected, the link posts automatically to Classroom</div>
+          <div style="font-size:12px;color:var(--muted);display:flex;gap:8px;"><span style="color:var(--green);font-weight:700;">✓</span> Future Academy watermark added in description</div>
+        </div>
+        <div style="margin-top:16px;" id="recent-uploads-wrap">
+          <div class="card-hd"><div class="card-title">Recent Uploads</div></div>
+          <div id="recent-uploads"><div class="loading-state"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHEDULE ─────────────────────────────────── -->
+  <div class="section" id="sec-schedule">
+    <div style="margin-bottom:20px;"><h2 style="font-size:20px;font-weight:800;">Weekly Schedule</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">UAE school week — Sunday to Thursday · Gulf Standard Time</p></div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;" id="schedule-grid"></div>
+  </div>
+
+  <!-- ── FEE TRACKER ──────────────────────────────── -->
+  <div class="section" id="sec-tracker">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div><h2 style="font-size:20px;font-weight:800;">Fee Tracker</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Connected to Google Sheets · <span id="tracker-sheet-link" style="color:var(--gold);cursor:pointer;" onclick="openSheets()">Open Sheets ↗</span></p></div>
+      <div style="display:flex;gap:10px;">
+        <button class="card-action" onclick="openModal('add-payment-modal')">+ Record Payment</button>
+        <button class="refresh-btn" onclick="loadSheetData()">↻ Sync</button>
+      </div>
+    </div>
+    <div class="tracker-grid">
+      <div class="tracker-stat"><div class="tracker-val" id="t-total">—</div><div class="tracker-label">Total Students</div></div>
+      <div class="tracker-stat" style="background:var(--green-bg);"><div class="tracker-val" style="color:var(--green)" id="t-paid">—</div><div class="tracker-label">Paid This Month</div></div>
+      <div class="tracker-stat" style="background:var(--red-bg);"><div class="tracker-val" style="color:var(--red)" id="t-due">—</div><div class="tracker-label">Payment Overdue</div></div>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <div class="card-hd">
+        <div class="card-title">💰 Payment Records</div>
+        <div style="display:flex;gap:8px;">
+          <button class="refresh-btn" onclick="sendFeeReminders()" style="font-size:11px;">📱 Send Reminders</button>
+        </div>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Student</th><th>Grade</th><th>Plan</th><th>Amount</th><th>Month</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="fee-table"><tr><td colspan="7"><div class="loading-state"><div class="spinner"></div> Loading from Sheets...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── REPORTS ──────────────────────────────────── -->
+  <div class="section" id="sec-reports">
+    <div style="margin-bottom:20px;"><h2 style="font-size:20px;font-weight:800;">Reports & Analytics</h2><p style="font-size:13px;color:var(--muted);margin-top:3px;">Academy-wide performance overview</p></div>
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card"><div class="stat-emoji" style="margin-bottom:8px;">🏫</div><div class="stat-label">Active Classes</div><div class="stat-val" id="r-classes">—</div></div>
+      <div class="stat-card"><div class="stat-emoji" style="margin-bottom:8px;">👩‍🎓</div><div class="stat-label">Total Students</div><div class="stat-val" id="r-students">—</div></div>
+      <div class="stat-card"><div class="stat-emoji" style="margin-bottom:8px;">▶️</div><div class="stat-label">Lessons Recorded</div><div class="stat-val" id="r-videos">—</div></div>
+      <div class="stat-card"><div class="stat-emoji" style="margin-bottom:8px;">📝</div><div class="stat-label">Assignments Posted</div><div class="stat-val" id="r-assigns">—</div></div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📊 Classes Overview</div></div>
+        <div id="report-classes"><div class="loading-state"><div class="spinner"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📈 Platform Activity</div></div>
+        <div style="display:flex;flex-direction:column;gap:12px;" id="report-activity">
+          <div class="prog-row"><div class="prog-header"><span class="prog-name">Google Classroom</span><span id="pr-classroom">—</span></div><div class="prog-bg"><div class="prog-fill" id="pb-classroom" style="width:0%;background:var(--gold);"></div></div></div>
+          <div class="prog-row"><div class="prog-header"><span class="prog-name">YouTube Videos</span><span id="pr-youtube">—</span></div><div class="prog-bg"><div class="prog-fill" id="pb-youtube" style="width:0%;background:#FF0000;"></div></div></div>
+          <div class="prog-row"><div class="prog-header"><span class="prog-name">Assignments Posted</span><span id="pr-assigns">—</span></div><div class="prog-bg"><div class="prog-fill" id="pb-assigns" style="width:0%;background:var(--blue);"></div></div></div>
+          <div class="prog-row"><div class="prog-header"><span class="prog-name">Student Enrollment</span><span id="pr-students">—</span></div><div class="prog-bg"><div class="prog-fill" id="pb-students" style="width:0%;background:var(--green);"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ═══ MODALS ════════════════════════════════════════════ -->
+<!-- Create Class Modal -->
+<div class="modal-backdrop" id="create-class-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('create-class-modal')">✕</button>
+    <div class="modal-title">🏫 Create New Class</div>
+    <div class="modal-sub">This will create a real class in your Google Classroom</div>
+    <div class="form-row">
+      <label class="form-label">Class Name *</label>
+      <input class="form-input" id="cc-name" placeholder="e.g. Grade 4 — Mathematics | Future Academy" />
+    </div>
+    <div class="form-row-two">
+      <div class="form-row">
+        <label class="form-label">Grade</label>
+        <select class="form-select" id="cc-grade"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option selected>Grade 4</option><option>Grade 5</option><option>Grade 6</option></select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Subject</label>
+        <select class="form-select" id="cc-subject"><option>Mathematics</option><option>English</option><option>Arabic</option><option>Science</option><option>Islamic Studies</option><option>Quran</option><option>Social Studies</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Section / Curriculum</label>
+      <select class="form-select" id="cc-section"><option>Arabic MOE Curriculum</option><option>American Curriculum</option><option>British Curriculum</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="cc-desc" placeholder="Welcome to Future Academy! Your teacher will post lessons, assignments and recordings here."></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Teacher Email (co-teacher)</label>
+      <input class="form-input" id="cc-teacher" placeholder="teacher@gmail.com" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('create-class-modal')">Cancel</button>
+      <button class="btn-primary" onclick="createClass()">Create in Google Classroom</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal-backdrop" id="create-assign-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('create-assign-modal')">✕</button>
+    <div class="modal-title">📝 Create Assignment</div>
+    <div class="modal-sub">Posts directly to Google Classroom</div>
+    <div class="form-row">
+      <label class="form-label">Class *</label>
+      <select class="form-select" id="ca-class"></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Assignment Title *</label>
+      <input class="form-input" id="ca-title" placeholder="e.g. Unit 3 — Fractions Worksheet" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Instructions</label>
+      <textarea class="form-textarea" id="ca-desc" placeholder="Complete all questions. Show your working. Submit by taking a photo of your work."></textarea>
+    </div>
+    <div class="form-row-two">
+      <div class="form-row">
+        <label class="form-label">Points</label>
+        <input class="form-input" id="ca-points" type="number" placeholder="100" value="100"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Due Date</label>
+        <input class="form-input" id="ca-due" type="date"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">YouTube Video Link (attach lesson recording)</label>
+      <input class="form-input" id="ca-video" placeholder="https://youtu.be/..." />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('create-assign-modal')">Cancel</button>
+      <button class="btn-primary" onclick="createAssignment()">Post Assignment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal-backdrop" id="announcement-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('announcement-modal')">✕</button>
+    <div class="modal-title">📢 Post Announcement</div>
+    <div class="modal-sub">Broadcasts to Google Classroom stream</div>
+    <div class="form-row">
+      <label class="form-label">Post to Class *</label>
+      <select class="form-select" id="ann-class"><option value="ALL">All Classes</option></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Message *</label>
+      <textarea class="form-textarea" id="ann-text" style="min-height:120px;" placeholder="e.g. 📅 This week's schedule:&#10;• Sunday 9AM: Maths live class&#10;• Monday: Recorded lesson uploaded&#10;• Homework due Thursday"></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Attach YouTube Link (optional)</label>
+      <input class="form-input" id="ann-link" placeholder="https://youtu.be/..." />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('announcement-modal')">Cancel</button>
+      <button class="btn-primary" onclick="postAnnouncement()">Post to Classroom</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Payment Modal -->
+<div class="modal-backdrop" id="add-payment-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('add-payment-modal')">✕</button>
+    <div class="modal-title">💰 Record Payment</div>
+    <div class="modal-sub">Saves to your Google Sheets tracker</div>
+    <div class="form-row-two">
+      <div class="form-row"><label class="form-label">Student Name *</label><input class="form-input" id="pay-name" placeholder="Full name"/></div>
+      <div class="form-row"><label class="form-label">Grade</label><select class="form-select" id="pay-grade"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option></select></div>
+    </div>
+    <div class="form-row-two">
+      <div class="form-row"><label class="form-label">Amount (AED)</label><input class="form-input" id="pay-amount" type="number" placeholder="250"/></div>
+      <div class="form-row"><label class="form-label">Month</label><input class="form-input" id="pay-month" type="month"/></div>
+    </div>
+    <div class="form-row-two">
+      <div class="form-row"><label class="form-label">Payment Method</label><select class="form-select" id="pay-method"><option>Bank Transfer</option><option>Wise</option><option>Cash</option><option>PayPal</option></select></div>
+      <div class="form-row"><label class="form-label">Status</label><select class="form-select" id="pay-status"><option>Paid</option><option>Due</option><option>Overdue</option></select></div>
+    </div>
+    <div class="form-row"><label class="form-label">Parent WhatsApp</label><input class="form-input" id="pay-wa" placeholder="+971xxxxxxxxx"/></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('add-payment-modal')">Cancel</button>
+      <button class="btn-primary" onclick="savePayment()">Save to Google Sheets</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"><span class="t-icon" id="toast-icon">✅</span><span id="toast-msg">Done!</span></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+// SCOPES — using minimum required, no restricted scopes
+// Removed: gmail.send (restricted), drive (sensitive), youtube (sensitive)
+// Replaced with: drive.file (only files created by this app), youtube.upload (upload only)
+const SCOPES = [
+  'https://www.googleapis.com/auth/classroom.courses',
+  'https://www.googleapis.com/auth/classroom.rosters.readonly',
+  'https://www.googleapis.com/auth/classroom.coursework.students',
+  'https://www.googleapis.com/auth/classroom.announcements',
+  'https://www.googleapis.com/auth/youtube.upload',
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/userinfo.profile',
+  'https://www.googleapis.com/auth/userinfo.email'
+].join(' ');
+
+let CLIENT_ID = '';
+let YT_CHANNEL_ID = '';
+let tokenClient;
+let accessToken = '';
+let allCourses = [];
+let allVideos = [];
+let allStudents = [];
+let allAssignments = [];
+let sheetId = localStorage.getItem('fa_sheet_id') || '';
+
+// Load saved config
+window.addEventListener('load', () => {
+  CLIENT_ID = localStorage.getItem('fa_client_id') || '';
+  YT_CHANNEL_ID = localStorage.getItem('fa_yt_channel') || '';
+  if (CLIENT_ID) {
+    document.getElementById('client-id-input').value = CLIENT_ID;
+    document.getElementById('yt-channel-input').value = YT_CHANNEL_ID;
+    setTimeout(initPlatform, 500);
+  }
+  // Set default due date
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+7);
+  document.getElementById('ca-due').value = tomorrow.toISOString().split('T')[0];
+  const thisMonth = new Date().toISOString().slice(0,7);
+  document.getElementById('pay-month').value = thisMonth;
+  buildSchedule();
+});
+
+// ── Upload title preview ─────────────────────────
+['up-grade','up-subject','up-topic'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateTitlePreview);
+  document.getElementById(id).addEventListener('change', updateTitlePreview);
+});
+function updateTitlePreview() {
+  const g = document.getElementById('up-grade').value || '[Grade]';
+  const s = document.getElementById('up-subject').value || '[Subject]';
+  const t = document.getElementById('up-topic').value || '[Topic]';
+  document.getElementById('title-preview').textContent = `${g} | ${s} | ${t} | Future Academy`;
+}
+
+// ═══════════════════════════════════════════════════
+// INIT & AUTH
+// ═══════════════════════════════════════════════════
+function initPlatform() {
+  CLIENT_ID = document.getElementById('client-id-input').value.trim();
+  YT_CHANNEL_ID = document.getElementById('yt-channel-input').value.trim();
+  if (!CLIENT_ID) { showToast('⚠️ Please enter your Client ID','error'); return; }
+  localStorage.setItem('fa_client_id', CLIENT_ID);
+  localStorage.setItem('fa_yt_channel', YT_CHANNEL_ID);
+
+  gapi.load('client', async () => {
+    await gapi.client.init({});
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: onTokenReceived,
+      error_callback: (e) => { showToast('❌ Auth error: ' + e.message,'error'); }
+    });
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  });
+}
+
+async function onTokenReceived(resp) {
+  if (resp.error) { showToast('❌ ' + resp.error,'error'); return; }
+  accessToken = resp.access_token;
+  gapi.client.setToken({ access_token: accessToken });
+
+  // Hide setup, show app
+  document.getElementById('setup-overlay').style.display = 'none';
+
+  // Load user info
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{ Authorization:'Bearer '+accessToken }});
+    const u = await r.json();
+    const name = u.name || u.email;
+    const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('user-initials').textContent = initials;
+    document.getElementById('hero-name').textContent = name.split(' ')[0];
+    document.getElementById('sidebar-email').textContent = u.email;
+  } catch(e) {}
+
+  setStatus('ok','Connected');
+  updateServiceStatus('svc-classroom','Connected','pill-green');
+  updateServiceStatus('svc-youtube','Connected','pill-green');
+  updateServiceStatus('svc-drive','Connected','pill-green');
+  updateServiceStatus('svc-sheets','Connected','pill-green');
+
+  refreshAll();
+}
+
+function setStatus(type, text) {
+  const el = document.getElementById('api-status');
+  el.className = 'api-status ' + (type==='ok'?'ok':type==='loading'?'loading':'err');
+  const col = type==='ok'?'green':type==='loading'?'blue':'red';
+  el.innerHTML = `<div class="pulse ${col}"></div> ${text}`;
+}
+
+function updateServiceStatus(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'pill ' + cls;
+}
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = '';
+  localStorage.removeItem('fa_client_id');
+  localStorage.removeItem('fa_yt_channel');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════════════════
+async function refreshAll() {
+  setStatus('loading','Refreshing...');
+  await Promise.all([loadCourses(), loadVideos(), loadSheetData()]);
+  setStatus('ok','Live — All systems connected');
+  updateReports();
+  showToast('✅ All data refreshed');
+}
+
+// ── GOOGLE CLASSROOM ────────────────────────────
+async function loadCourses() {
+  try {
+    const r = await gapi.client.request({ path:'https://classroom.googleapis.com/v1/courses', params:{teacherId:'me',courseStates:'ACTIVE',pageSize:50}});
+    allCourses = r.result.courses || [];
+    renderCourses();
+    loadAllStudents();
+    loadAllAssignments();
+    loadAnnouncements();
+    populateClassSelects();
+    document.getElementById('badge-classes').textContent = allCourses.length;
+    document.getElementById('dash-classes').textContent = allCourses.length;
+    document.getElementById('class-count').textContent = allCourses.length + ' classes found';
+  } catch(e) {
+    showToast('⚠️ Classroom: ' + (e.result?.error?.message || e.message),'error');
+    document.getElementById('dash-class-list').innerHTML = `<div class="empty"><div class="empty-icon">🏫</div><div class="empty-text">Could not load classes. Check API permissions.</div></div>`;
+  }
+}
+
+function renderCourses() {
+  const colors = ['#F4B942','#1D9E75','#378ADD','#E24B4A','#7F77DD','#EF9F27','#D85A30','#639922'];
+  // Full list
+  const listHTML = allCourses.map((c,i) => `
+    <div class="class-item" onclick="viewClass('${c.id}')">
+      <div class="class-color" style="background:${colors[i%colors.length]};"></div>
+      <div class="class-info">
+        <div class="class-name">${c.name}</div>
+        <div class="class-meta">${c.section||''} ${c.room?'· Room: '+c.room:''}</div>
+      </div>
+      <div class="class-stats">
+        <div class="class-stat"><div class="class-stat-val" id="count-${c.id}">—</div><div class="class-stat-lbl">Students</div></div>
+        <div class="class-stat"><div class="class-stat-val" id="assign-${c.id}">—</div><div class="class-stat-lbl">Tasks</div></div>
+      </div>
+      <a class="open-btn" href="${c.alternateLink}" target="_blank">Open ↗</a>
+    </div>`).join('');
+  document.getElementById('classes-list').innerHTML = listHTML || '<div class="empty"><div class="empty-icon">🏫</div><div class="empty-text">No active classes found. Create your first class!</div></div>';
+  // Dashboard mini list (top 4)
+  const dashHTML = allCourses.slice(0,4).map((c,i) => `
+    <div class="class-item" onclick="viewClass('${c.id}')">
+      <div class="class-color" style="background:${colors[i%colors.length]};height:36px;"></div>
+      <div class="class-info"><div class="class-name">${c.name}</div><div class="class-meta">${c.section||'No section'}</div></div>
+      <a class="open-btn" href="${c.alternateLink}" target="_blank">Open ↗</a>
+    </div>`).join('');
+  document.getElementById('dash-class-list').innerHTML = dashHTML || '<div class="empty"><div class="empty-icon">🏫</div><div class="empty-text">No classes yet</div></div>';
+}
+
+async function loadAllStudents() {
+  allStudents = [];
+  const sel = document.getElementById('student-class-filter');
+  sel.innerHTML = '<option value="">All Classes</option>';
+  for (const c of allCourses) {
+    try {
+      sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      const r = await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${c.id}/students`, params:{pageSize:100}});
+      const studs = (r.result.students||[]).map(s => ({...s, courseName:c.name, courseId:c.id}));
+      allStudents.push(...studs);
+      const el = document.getElementById('count-'+c.id);
+      if (el) el.textContent = studs.length;
+    } catch(e) {}
+  }
+  document.getElementById('badge-students').textContent = allStudents.length;
+  document.getElementById('dash-students').textContent = allStudents.length;
+  renderStudents(allStudents);
+}
+
+function renderStudents(studs) {
+  if (!studs.length) { document.getElementById('students-table').innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-icon">👩‍🎓</div><div class="empty-text">No students enrolled yet</div></div></td></tr>'; return; }
+  document.getElementById('students-table').innerHTML = studs.map(s => `
+    <tr>
+      <td><strong>${s.profile?.name?.fullName||'Unknown'}</strong></td>
+      <td style="color:var(--muted);font-size:11px;">${s.profile?.emailAddress||'—'}</td>
+      <td><span class="pill pill-blue" style="font-size:9px;">${s.courseName}</span></td>
+      <td style="color:var(--muted);font-size:11px;">${s.enrollmentCode||'—'}</td>
+      <td><span class="pill pill-green">Enrolled</span></td>
+    </tr>`).join('');
+}
+
+function filterStudentsByClass() {
+  const cid = document.getElementById('student-class-filter').value;
+  renderStudents(cid ? allStudents.filter(s=>s.courseId===cid) : allStudents);
+}
+
+async function loadAllAssignments() {
+  allAssignments = [];
+  for (const c of allCourses) {
+    try {
+      const r = await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${c.id}/courseWork`, params:{pageSize:20,orderBy:'updateTime desc'}});
+      const works = (r.result.courseWork||[]).map(w=>({...w, courseName:c.name}));
+      allAssignments.push(...works);
+      const el = document.getElementById('assign-'+c.id);
+      if (el) el.textContent = works.length;
+    } catch(e) {}
+  }
+  document.getElementById('badge-assign').textContent = allAssignments.length;
+  document.getElementById('dash-assignments').textContent = allAssignments.length;
+  renderAssignments(allAssignments);
+}
+
+function renderAssignments(assigns) {
+  if (!assigns.length) { document.getElementById('assign-table').innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">📝</div><div class="empty-text">No assignments yet</div></div></td></tr>'; return; }
+  document.getElementById('assign-table').innerHTML = assigns.slice(0,30).map(a => {
+    const due = a.dueDate ? `${a.dueDate.year}/${String(a.dueDate.month).padStart(2,'0')}/${String(a.dueDate.day).padStart(2,'0')}` : '—';
+    const state = a.state==='PUBLISHED' ? '<span class="pill pill-green">Published</span>' : '<span class="pill pill-yellow">Draft</span>';
+    return `<tr>
+      <td><strong>${a.title}</strong></td>
+      <td style="font-size:11px;color:var(--muted);">${a.courseName}</td>
+      <td><span class="pill pill-blue" style="font-size:9px;">${a.workType||'Assignment'}</span></td>
+      <td>${a.maxPoints||'—'}</td>
+      <td style="font-size:11px;">${due}</td>
+      <td>${state}</td>
+      <td><a href="${a.alternateLink}" target="_blank" class="open-btn" style="font-size:10px;">Open ↗</a></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadAnnouncements() {
+  const all = [];
+  for (const c of allCourses) {
+    try {
+      const r = await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${c.id}/announcements`, params:{pageSize:5,orderBy:'updateTime desc'}});
+      (r.result.announcements||[]).forEach(a => all.push({...a, courseName:c.name}));
+    } catch(e) {}
+  }
+  all.sort((a,b) => new Date(b.updateTime)-new Date(a.updateTime));
+  document.getElementById('announcements-list').innerHTML = all.slice(0,20).map(a => {
+    const d = new Date(a.updateTime).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    return `<div class="ann-item">
+      <div class="ann-header"><span class="ann-class">${a.courseName}</span><span class="ann-time">${d}</span></div>
+      <div class="ann-text">${(a.text||'').substring(0,300)}${(a.text||'').length>300?'...':''}</div>
+    </div>`;
+  }).join('') || '<div class="empty"><div class="empty-icon">📢</div><div class="empty-text">No announcements yet</div></div>';
+}
+
+// ── YOUTUBE ─────────────────────────────────────
+async function loadVideos() {
+  try {
+    let path = 'https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=50&order=date';
+    if (YT_CHANNEL_ID) path = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${YT_CHANNEL_ID}&type=video&maxResults=50&order=date`;
+    const r = await fetch(path, { headers:{ Authorization:'Bearer '+accessToken }});
+    const data = await r.json();
+    allVideos = data.items || [];
+    document.getElementById('badge-videos').textContent = allVideos.length;
+    document.getElementById('dash-videos').textContent = allVideos.length;
+    renderVideos();
+  } catch(e) {
+    document.getElementById('dash-video-list').innerHTML = '<div class="empty"><div class="empty-icon">▶️</div><div class="empty-text">Could not load YouTube videos</div></div>';
+  }
+}
+
+function renderVideos() {
+  const makeVid = v => {
+    const vid = v.id?.videoId || v.id;
+    const snippet = v.snippet;
+    const thumb = snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '';
+    return `<div class="video-item">
+      <div class="video-thumb">${thumb ? `<img class="video-thumb-img" src="${thumb}" loading="lazy">` : '<div class="video-thumb-placeholder">▶</div>'}</div>
+      <div class="video-info">
+        <div class="video-title">${snippet.title}</div>
+        <div class="video-meta">${snippet.channelTitle} · ${new Date(snippet.publishedAt).toLocaleDateString()}</div>
+      </div>
+      <div class="video-stats">
+        <a class="video-link" href="https://youtu.be/${vid}" target="_blank">Watch ↗</a>
+        <a class="video-link" style="color:var(--navy);font-size:9px;" href="https://studio.youtube.com/video/${vid}/edit" target="_blank">Edit</a>
+      </div>
+    </div>`;
+  };
+  const html = allVideos.slice(0,50).map(makeVid).join('') || '<div class="empty"><div class="empty-icon">▶️</div><div class="empty-text">No videos found in your channel</div></div>';
+  document.getElementById('videos-list').innerHTML = html;
+  document.getElementById('dash-video-list').innerHTML = allVideos.slice(0,4).map(makeVid).join('') || '<div class="empty"><div class="empty-icon">▶️</div><div class="empty-text">No videos yet</div></div>';
+  // Recent uploads panel
+  document.getElementById('recent-uploads').innerHTML = allVideos.slice(0,3).map(v => {
+    const vid = v.id?.videoId || v.id;
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--bg2);font-size:11px;"><div style="font-weight:600;color:var(--navy);">${v.snippet.title.substring(0,50)}...</div><a href="https://youtu.be/${vid}" target="_blank" style="color:var(--gold);font-weight:700;">Watch ↗</a></div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--muted);">No videos yet</div>';
+  // Upload class select
+  const upSel = document.getElementById('up-class');
+  upSel.innerHTML = '<option value="">Don\'t post to Classroom</option>' + allCourses.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+// ── GOOGLE SHEETS (Fee Tracker) ──────────────────
+async function loadSheetData() {
+  if (!sheetId) { renderFakePayments(); return; }
+  try {
+    const r = await gapi.client.request({ path:`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Payments!A:H`});
+    const rows = r.result.values || [];
+    if (rows.length <= 1) { renderFakePayments(); return; }
+    const data = rows.slice(1);
+    const paid = data.filter(r=>r[5]==='Paid').length;
+    const due = data.filter(r=>r[5]==='Overdue'||r[5]==='Due').length;
+    document.getElementById('t-total').textContent = data.length;
+    document.getElementById('t-paid').textContent = paid;
+    document.getElementById('t-due').textContent = due;
+    document.getElementById('fee-table').innerHTML = data.slice(0,30).map(r => `
+      <tr>
+        <td><strong>${r[0]||'—'}</strong></td><td>${r[1]||'—'}</td><td>${r[2]||'—'}</td>
+        <td>AED ${r[3]||'—'}</td><td>${r[4]||'—'}</td>
+        <td>${statusPill(r[5])}</td>
+        <td><button onclick="sendPaymentReminder('${r[0]}','${r[6]||''}')" style="font-size:10px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--white);cursor:pointer;color:var(--navy);">📱 Remind</button></td>
+      </tr>`).join('');
+  } catch(e) { renderFakePayments(); }
+}
+
+function renderFakePayments() {
+  document.getElementById('t-total').textContent = '—';
+  document.getElementById('t-paid').textContent = '—';
+  document.getElementById('t-due').textContent = '—';
+  document.getElementById('fee-table').innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Connect your Google Sheet ID in settings to track fees.<br><a href="https://sheets.google.com" target="_blank" style="color:var(--gold);font-weight:700;">Create a sheet →</a></div></div></td></tr>`;
+}
+
+function statusPill(s) {
+  if (s==='Paid') return '<span class="pill pill-green">✅ Paid</span>';
+  if (s==='Overdue') return '<span class="pill pill-red">❌ Overdue</span>';
+  return '<span class="pill pill-yellow">⏳ Due</span>';
+}
+
+function openSheets() {
+  if (sheetId) window.open(`https://docs.google.com/spreadsheets/d/${sheetId}`, '_blank');
+  else window.open('https://sheets.google.com', '_blank');
+}
+
+// ═══════════════════════════════════════════════════
+// ACTIONS — WRITE BACK TO GOOGLE APIs
+// ═══════════════════════════════════════════════════
+
+// Create Google Classroom course
+async function createClass() {
+  const name = document.getElementById('cc-name').value.trim();
+  const grade = document.getElementById('cc-grade').value;
+  const subject = document.getElementById('cc-subject').value;
+  const section = document.getElementById('cc-section').value;
+  const desc = document.getElementById('cc-desc').value;
+  const teacherEmail = document.getElementById('cc-teacher').value.trim();
+  if (!name && !(grade && subject)) { showToast('⚠️ Fill in the class name','error'); return; }
+  const className = name || `${grade} — ${subject} | Future Academy`;
+  try {
+    const r = await gapi.client.request({
+      path:'https://classroom.googleapis.com/v1/courses',
+      method:'POST',
+      body: JSON.stringify({ name:className, section, descriptionHeading:className, description: desc||`Welcome to Future Academy! ${grade} ${subject} class.`, room: section, courseState:'ACTIVE' })
+    });
+    const course = r.result;
+    // Invite co-teacher if provided
+    if (teacherEmail) {
+      try {
+        await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${course.id}/teachers`, method:'POST', body: JSON.stringify({ userId: teacherEmail })});
+      } catch(e) {}
+    }
+    closeModal('create-class-modal');
+    showToast(`✅ "${className}" created in Google Classroom!`);
+    loadCourses();
+  } catch(e) { showToast('❌ ' + (e.result?.error?.message||'Could not create class'),'error'); }
+}
+
+// Post assignment
+async function createAssignment() {
+  const courseId = document.getElementById('ca-class').value;
+  const title = document.getElementById('ca-title').value.trim();
+  const desc = document.getElementById('ca-desc').value;
+  const points = parseInt(document.getElementById('ca-points').value)||100;
+  const dueStr = document.getElementById('ca-due').value;
+  const videoUrl = document.getElementById('ca-video').value.trim();
+  if (!courseId) { showToast('⚠️ Select a class','error'); return; }
+  if (!title) { showToast('⚠️ Enter a title','error'); return; }
+  const body = { title, description: desc, maxPoints: points, state:'PUBLISHED', workType:'ASSIGNMENT' };
+  if (dueStr) {
+    const d = new Date(dueStr);
+    body.dueDate = { year:d.getFullYear(), month:d.getMonth()+1, day:d.getDate() };
+    body.dueTime = { hours:23, minutes:59 };
+  }
+  if (videoUrl) body.materials = [{ link:{ url:videoUrl, title:'📹 Lesson Recording' }}];
+  try {
+    await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${courseId}/courseWork`, method:'POST', body: JSON.stringify(body)});
+    closeModal('create-assign-modal');
+    showToast('✅ Assignment posted to Google Classroom!');
+    loadAllAssignments();
+  } catch(e) { showToast('❌ ' + (e.result?.error?.message||'Error posting assignment'),'error'); }
+}
+
+// Post announcement
+async function postAnnouncement() {
+  const courseId = document.getElementById('ann-class').value;
+  const text = document.getElementById('ann-text').value.trim();
+  const link = document.getElementById('ann-link').value.trim();
+  if (!text) { showToast('⚠️ Write a message','error'); return; }
+  const body = { text, state:'PUBLISHED' };
+  if (link) body.materials = [{ link:{ url:link, title:'📹 Lesson Recording' }}];
+  const targets = courseId==='ALL' ? allCourses.map(c=>c.id) : [courseId];
+  try {
+    await Promise.all(targets.map(cid => gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${cid}/announcements`, method:'POST', body: JSON.stringify(body)})));
+    closeModal('announcement-modal');
+    showToast(`✅ Announcement posted to ${targets.length} class${targets.length>1?'es':''}!`);
+    loadAnnouncements();
+  } catch(e) { showToast('❌ ' + (e.result?.error?.message||'Error posting'),'error'); }
+}
+
+// YouTube upload
+let selectedFile = null;
+function onVideoFileSelect() {
+  const f = document.getElementById('up-file').files[0];
+  if (f) { selectedFile=f; document.getElementById('file-selected').style.display='block'; document.getElementById('file-selected').textContent='📹 '+f.name+' ('+Math.round(f.size/1024/1024)+'MB)'; document.getElementById('upload-drop').style.display='none'; }
+}
+function onDrop(e) {
+  e.preventDefault(); document.getElementById('up-file').files;
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) { selectedFile=f; document.getElementById('file-selected').style.display='block'; document.getElementById('file-selected').textContent='📹 '+f.name; document.getElementById('upload-drop').style.display='none'; }
+}
+
+async function uploadToYouTube() {
+  if (!selectedFile) { showToast('⚠️ Select a video file first','error'); return; }
+  const grade = document.getElementById('up-grade').value;
+  const subject = document.getElementById('up-subject').value;
+  const topic = document.getElementById('up-topic').value.trim();
+  const desc = document.getElementById('up-desc').value;
+  const classId = document.getElementById('up-class').value;
+  if (!grade||!subject||!topic) { showToast('⚠️ Fill in Grade, Subject and Topic','error'); return; }
+  const title = `${grade} | ${subject} | ${topic} | Future Academy`;
+  const description = `${desc}\n\nFuture Academy — أكاديمية المستقبل\nDubai, UAE\nfuture.academy.ae@gmail.com\n\nThis lesson is for enrolled students only.`;
+
+  const metadata = { snippet:{ title, description, tags:['Future Academy','Dubai','Online Learning',grade,subject], categoryId:'27' }, status:{ privacyStatus:'unlisted' }};
+
+  const boundary = '===END===';
+  const delim = '--'+boundary;
+  const body = delim+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n'+delim+'\r\nContent-Type: '+selectedFile.type+'\r\n\r\n';
+
+  const pw = document.getElementById('upload-progress-wrap');
+  const pb = document.getElementById('upload-progress-bar');
+  const pt = document.getElementById('upload-progress-text');
+  pw.style.display='block'; pb.style.width='5%'; pt.textContent='Uploading to YouTube...';
+
+  try {
+    // Use XMLHttpRequest for upload progress
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(selectedFile);
+    reader.onload = async () => {
+      const videoBytes = reader.result;
+      const metaStr = JSON.stringify(metadata);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=multipart&part=snippet,status');
+      xhr.setRequestHeader('Authorization','Bearer '+accessToken);
+      xhr.setRequestHeader('Content-Type','multipart/related; boundary='+boundary);
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) { const pct=Math.round(e.loaded/e.total*100); pb.style.width=pct+'%'; pt.textContent=`Uploading... ${pct}%`; }
+      };
+      xhr.onload = async () => {
+        const result = JSON.parse(xhr.responseText);
+        if (xhr.status===200) {
+          const videoId = result.id;
+          const ytLink = 'https://youtu.be/'+videoId;
+          pb.style.width='100%'; pb.style.background='var(--green)';
+          pt.innerHTML = `✅ Uploaded! <a href="${ytLink}" target="_blank" style="color:var(--gold);font-weight:700;">${ytLink}</a>`;
+          // Post to Classroom if selected
+          if (classId) {
+            await gapi.client.request({ path:`https://classroom.googleapis.com/v1/courses/${classId}/announcements`, method:'POST',
+              body: JSON.stringify({ text:`📹 New lesson recording: ${title}\n\nWatch here: ${ytLink}`, state:'PUBLISHED', materials:[{link:{url:ytLink,title:'📹 '+title}}]})});
+            showToast('✅ Uploaded & posted to Classroom!');
+          } else { showToast('✅ Video uploaded to YouTube!'); }
+          loadVideos();
+        } else { showToast('❌ Upload failed: ' + (result.error?.message||'Unknown error'),'error'); pb.style.background='var(--red)'; }
+      };
+      // Build multipart body
+      const enc = new TextEncoder();
+      const part1 = enc.encode('--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+metaStr+'\r\n--'+boundary+'\r\nContent-Type: '+selectedFile.type+'\r\n\r\n');
+      const part3 = enc.encode('\r\n--'+boundary+'--');
+      const combined = new Uint8Array(part1.length + videoBytes.byteLength + part3.length);
+      combined.set(part1,0); combined.set(new Uint8Array(videoBytes),part1.length); combined.set(part3,part1.length+videoBytes.byteLength);
+      xhr.send(combined);
+    };
+  } catch(e) { showToast('❌ Upload error: '+e.message,'error'); }
+}
+
+// Save payment to Sheets
+async function savePayment() {
+  const name = document.getElementById('pay-name').value.trim();
+  const grade = document.getElementById('pay-grade').value;
+  const amount = document.getElementById('pay-amount').value;
+  const month = document.getElementById('pay-month').value;
+  const method = document.getElementById('pay-method').value;
+  const status = document.getElementById('pay-status').value;
+  const wa = document.getElementById('pay-wa').value;
+  if (!name||!amount) { showToast('⚠️ Fill student name and amount','error'); return; }
+  if (!sheetId) {
+    const sid = prompt('Enter your Google Sheet ID (from the URL: docs.google.com/spreadsheets/d/[ID]/edit):');
+    if (sid) { sheetId=sid.trim(); localStorage.setItem('fa_sheet_id',sheetId); }
+    else return;
+  }
+  const today = new Date().toLocaleDateString('en-GB');
+  const row = [[name,grade,'All subjects',amount,month,status,today,method,wa]];
+  try {
+    await gapi.client.request({ path:`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Payments!A:I:append`, method:'POST', params:{valueInputOption:'RAW'}, body: JSON.stringify({ values:row })});
+    closeModal('add-payment-modal');
+    showToast('✅ Payment saved to Google Sheets!');
+    loadSheetData();
+  } catch(e) { showToast('❌ Sheets error: '+(e.result?.error?.message||e.message),'error'); }
+}
+
+function sendPaymentReminder(name, wa) {
+  const msg = encodeURIComponent(`مرحباً، تذكير برسوم شهر ${new Date().toLocaleString('ar',{month:'long'})} لـ ${name} في Future Academy. الرجاء التحويل والتواصل معنا. شكراً 🎓`);
+  if (wa) window.open(`https://wa.me/${wa.replace(/\D/g,'')}?text=${msg}`,'_blank');
+  else { window.open(`https://wa.me/971502307960?text=${msg}`,'_blank'); }
+}
+
+function sendFeeReminders() { showToast('📱 Opening WhatsApp for overdue payments...'); }
+
+// ═══════════════════════════════════════════════════
+// SCHEDULE BUILDER
+// ═══════════════════════════════════════════════════
+function buildSchedule() {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
+  const schedule = {
+    Sunday:[{t:'9:00 AM',n:'Grade 4 Maths',c:'live'},{t:'11:00 AM',n:'Grade 5 English',c:'live'},{t:'3:00 PM',n:'Grade 3 Arabic',c:'live'},{t:'Anytime',n:'Islamic Studies Gr 3',c:'rec'}],
+    Monday:[{t:'9:00 AM',n:'Grade 4 English',c:'live'},{t:'10:00 AM',n:'Grade 5 Maths',c:'live'},{t:'3:00 PM',n:'Grade 2 Maths',c:'live'},{t:'4:00 PM',n:'Quran Gr 4',c:'live'},{t:'Anytime',n:'Social Studies Gr 4',c:'rec'}],
+    Tuesday:[{t:'9:00 AM',n:'Grade 4 Maths',c:'live'},{t:'10:00 AM',n:'Grade 6 Arabic',c:'live'},{t:'3:30 PM',n:'Grade 1 English',c:'live'},{t:'Anytime',n:'History Gr 5–6',c:'rec'}],
+    Wednesday:[{t:'9:00 AM',n:'Grade 3 Science',c:'live'},{t:'10:00 AM',n:'Grade 5 Arabic',c:'live'},{t:'4:00 PM',n:'Quran Gr 5',c:'live'},{t:'Anytime',n:'Islamic Gr 5',c:'rec'}],
+    Thursday:[{t:'9:00 AM',n:'Grade 4 Science',c:'live'},{t:'10:00 AM',n:'Grade 6 English',c:'live'},{t:'3:00 PM',n:'Grade 2 Arabic',c:'live'},{t:'Anytime',n:'Geography Gr 4–6',c:'rec'}]
+  };
+  document.getElementById('schedule-grid').innerHTML = days.map(d => `
+    <div class="cal-day">
+      <div class="cal-head">${d}</div>
+      ${(schedule[d]||[]).map(s => `<div class="cal-slot cal-${s.c}"><div class="cal-slot-name">${s.n}</div><div class="cal-slot-time">${s.t} · ${s.c==='live'?'🔴 Live':'▶ Recorded'}</div></div>`).join('')}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════
+function updateReports() {
+  document.getElementById('r-classes').textContent = allCourses.length||'—';
+  document.getElementById('r-students').textContent = allStudents.length||'—';
+  document.getElementById('r-videos').textContent = allVideos.length||'—';
+  document.getElementById('r-assigns').textContent = allAssignments.length||'—';
+  const max = Math.max(allCourses.length,allStudents.length,allVideos.length,allAssignments.length,1);
+  document.getElementById('pr-classroom').textContent = allCourses.length + ' classes';
+  document.getElementById('pb-classroom').style.width = Math.round(allCourses.length/Math.max(allCourses.length,10)*100)+'%';
+  document.getElementById('pr-youtube').textContent = allVideos.length + ' videos';
+  document.getElementById('pb-youtube').style.width = Math.min(100,Math.round(allVideos.length/50*100))+'%';
+  document.getElementById('pr-assigns').textContent = allAssignments.length + ' posted';
+  document.getElementById('pb-assigns').style.width = Math.min(100,Math.round(allAssignments.length/20*100))+'%';
+  document.getElementById('pr-students').textContent = allStudents.length + ' enrolled';
+  document.getElementById('pb-students').style.width = Math.min(100,Math.round(allStudents.length/100*100))+'%';
+  const colors = ['#F4B942','#1D9E75','#378ADD','#E24B4A','#7F77DD'];
+  document.getElementById('report-classes').innerHTML = allCourses.slice(0,8).map((c,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--bg2);">
+      <div style="width:10px;height:10px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0;"></div>
+      <div style="flex:1;font-size:12px;font-weight:600;">${c.name}</div>
+      <div style="font-size:11px;color:var(--muted);" id="r-count-${c.id}">${document.getElementById('count-'+c.id)?.textContent||'—'} students</div>
+      <a href="${c.alternateLink}" target="_blank" class="open-btn" style="font-size:9px;padding:3px 7px;">Open ↗</a>
+    </div>`).join('') || '<div class="empty"><div class="empty-text">No classes yet</div></div>';
+}
+
+// ═══════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════
+const sectionTitles = {dashboard:'Dashboard',classes:'My Classes',students:'Students',assignments:'Assignments',announcements:'Announcements',videos:'Video Library',upload:'Upload Lesson',schedule:'Weekly Schedule',tracker:'Fee Tracker',reports:'Reports'};
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('page-title').textContent = sectionTitles[id]||id;
+  if (id==='reports') updateReports();
+  if (id==='tracker') loadSheetData();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-backdrop')) closeModal(e.target.id);
+});
+
+function switchTab(el, idx, prefix) {
+  el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function viewClass(id) {
+  const c = allCourses.find(x=>x.id===id);
+  if (c) window.open(c.alternateLink,'_blank');
+}
+
+function populateClassSelects() {
+  ['ca-class','ann-class'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    const extra = selId==='ann-class' ? '<option value="ALL">📢 All Classes</option>' : '';
+    sel.innerHTML = extra + allCourses.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  });
+}
+
+let toastTimer;
+function showToast(msg, type='success') {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  const icon = type==='error' ? '❌' : '✅';
+  document.getElementById('toast-icon').textContent = icon;
+  document.getElementById('toast-msg').textContent = msg;
+  t.style.background = type==='error' ? 'var(--red)' : 'var(--navy)';
+  t.classList.add('show');
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
